@@ -25,30 +25,30 @@ jobs:
           mv extracted_project/* .
         fi
 
-    # 2. إنشاء ملف بيئة وهمي لتخطي خطأ (.env.example)
+    # 2. إنشاء ملف بيئة وهمي لتخطي الأخطاء
     - name: Create Mock Environment File
       run: |
         touch .env.example
         touch .env
 
-    # 3. إعداد الجافا المتوافقة (إصدار 17)
-    - name: Set up JDK 17
+    # 3. إعداد الجافا المتوافقة (إصدار 21 ليناسب أدوات أندرويد الحديثة)
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
 
-    # 4. توليد واستخدام إصدار Gradle مستقر ومتوافق (مثل 8.0) بدلاً من الإصدارات الحديثة جداً
+    # 4. توليد واستخدام إصدار Gradle المتوافق المطلوب (9.3.1)
     - name: Setup Gradle Wrapper
       run: |
-        gradle wrapper --gradle-version 8.0.2
+        gradle wrapper --gradle-version 9.3.1
         chmod +x gradlew
 
-    # 5. بناء التطبيق وتخطي ميزات الكاش المسببة للمشاكل
+    # 5. بناء التطبيق
     - name: Build with Gradle
       run: ./gradlew assembleDebug --no-daemon
 
-    # 6. رفع ملف الـ APK
+    # 6. رفع ملف الـ APK النهائي
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
