@@ -13,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 1. فك الضغط أولاً قبل إعداد الجافا لتكون الملفات مرئية للنظام
+    # 1. فك ضغط ملفات المشروع
     - name: Unzip Project Files
       run: |
         unzip ubuntu-touch-launcher.zip -d extracted_project
@@ -25,26 +25,30 @@ jobs:
           mv extracted_project/* .
         fi
 
-    # 2. إعداد الجافا بدون خاصية الكاش لتجنب خطأ الفحص المسبق
+    # 2. إنشاء ملف بيئة وهمي لتخطي خطأ (.env.example)
+    - name: Create Mock Environment File
+      run: |
+        touch .env.example
+        touch .env
+
+    # 3. إعداد الجافا المتوافقة (إصدار 17)
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # 3. التأكد من وجود ملف تشغيل Gradle وصلاحياته
-    - name: Grant execute permission for gradlew
+    # 4. توليد واستخدام إصدار Gradle مستقر ومتوافق (مثل 8.0) بدلاً من الإصدارات الحديثة جداً
+    - name: Setup Gradle Wrapper
       run: |
-        if [ ! -f "gradlew" ]; then
-          gradle wrapper
-        fi
+        gradle wrapper --gradle-version 8.0.2
         chmod +x gradlew
 
-    # 4. بناء التطبيق
+    # 5. بناء التطبيق وتخطي ميزات الكاش المسببة للمشاكل
     - name: Build with Gradle
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --no-daemon
 
-    # 5. رفع ملف الـ APK النهائي للتحميل
+    # 6. رفع ملف الـ APK
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
