@@ -13,17 +13,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-
+    # 1. فك الضغط أولاً قبل إعداد الجافا لتكون الملفات مرئية للنظام
     - name: Unzip Project Files
       run: |
         unzip ubuntu-touch-launcher.zip -d extracted_project
-        # للتحقق من المجلد الداخلي والانتقال إليه ديناميكياً
         if [ -d "extracted_project/upuntu tutch" ]; then
           mv "extracted_project/upuntu tutch/"* .
         elif [ -d "extracted_project/ubuntu-touch-launcher" ]; then
@@ -32,6 +25,14 @@ jobs:
           mv extracted_project/* .
         fi
 
+    # 2. إعداد الجافا بدون خاصية الكاش لتجنب خطأ الفحص المسبق
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # 3. التأكد من وجود ملف تشغيل Gradle وصلاحياته
     - name: Grant execute permission for gradlew
       run: |
         if [ ! -f "gradlew" ]; then
@@ -39,9 +40,11 @@ jobs:
         fi
         chmod +x gradlew
 
+    # 4. بناء التطبيق
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
+    # 5. رفع ملف الـ APK النهائي للتحميل
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
