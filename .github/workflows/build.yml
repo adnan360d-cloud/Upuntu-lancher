@@ -31,24 +31,30 @@ jobs:
         touch .env.example
         touch .env
 
-    # 3. إعداد الجافا المتوافقة (إصدار 21 ليناسب أدوات أندرويد الحديثة)
+    # 3. تعديل الإعدادات لتعطيل الكاش الرسومي المسبب للانهيار في السيرفرات
+    - name: Fix Gradle Properties for Headless CI
+      run: |
+        echo "org.gradle.configuration-cache=false" >> gradle.properties
+        echo "kotlin.compiler.execution.strategy=daemon" >> gradle.properties
+
+    # 4. edge إعداد الجافا المتوافقة (إصدار 21)
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
 
-    # 4. توليد واستخدام إصدار Gradle المتوافق المطلوب (9.3.1)
+    # 5. توليد واستخدام إصدار Gradle المتوافق المطلوب (9.3.1)
     - name: Setup Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 9.3.1
         chmod +x gradlew
 
-    # 5. بناء التطبيق
+    # 6. بناء التطبيق بوضع الـ Daemon المستقر بالسيرفرات
     - name: Build with Gradle
-      run: ./gradlew assembleDebug --no-daemon
+      run: ./gradlew assembleDebug
 
-    # 6. رفع ملف الـ APK النهائي
+    # 7. رفع ملف الـ APK النهائي للتحميل
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
