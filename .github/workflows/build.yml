@@ -31,30 +31,40 @@ jobs:
         touch .env.example
         touch .env
 
-    # 3. تعديل الإعدادات لتعطيل الكاش الرسومي المسبب للانهيار في السيرفرات
+    # 3. تخطي التوقيع المخصص وإجبار النظام على استخدام التوقيع الافتراضي لأندرويد
+    - name: Bypass Custom Code Signing
+      run: |
+        if [ -f "app/build.gradle.kts" ]; then
+          sed -i 's/.*signingConfig =.*/\/\/ bypassed custom signing/g' app/build.gradle.kts
+        fi
+        if [ -f "app/build.gradle" ]; then
+          sed -i 's/.*signingConfig .*/\/\/ bypassed custom signing/g' app/build.gradle
+        fi
+
+    # 4. تعديل الإعدادات لتعطيل الكاش الرسومي المسبب للانهيار
     - name: Fix Gradle Properties for Headless CI
       run: |
         echo "org.gradle.configuration-cache=false" >> gradle.properties
         echo "kotlin.compiler.execution.strategy=daemon" >> gradle.properties
 
-    # 4. edge إعداد الجافا المتوافقة (إصدار 21)
+    # 5. إعداد الجافا المتوافقة (إصدار 21)
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
 
-    # 5. توليد واستخدام إصدار Gradle المتوافق المطلوب (9.3.1)
+    # 6. توليد واستخدام إصدار Gradle المتوافق المطلوب (9.3.1)
     - name: Setup Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 9.3.1
         chmod +x gradlew
 
-    # 6. بناء التطبيق بوضع الـ Daemon المستقر بالسيرفرات
+    # 7. بناء التطبيق النهائي
     - name: Build with Gradle
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --no-daemon
 
-    # 7. رفع ملف الـ APK النهائي للتحميل
+    # 8. رفع ملف الـ APK النهائي للتحميل
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
